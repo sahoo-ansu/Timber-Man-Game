@@ -28,7 +28,7 @@ void updateBee(Sprite &s, Time &dt, float &pixelPerSecond)
     float y = 600 + 30 * sin(timex * 1);
     if (x < -200)
     {
-        s.setPosition(1200, y);
+        s.setPosition(2000, y);
     }
     else
     {
@@ -50,6 +50,37 @@ void updateTimeBar(RectangleShape &timeBar,float &timeOutTime,float &timeBarPixP
             }
 }
 
+void updateBranch(Sprite *spriteBranch,int &chopheight,int &maxBranch){
+
+    for(int i=maxBranch-1;i>0;i--){
+        spriteBranch[i].setPosition(spriteBranch[i-1].getPosition());
+        spriteBranch[i].setRotation(spriteBranch[i].getRotation());  
+    }
+    
+
+    float x=spriteBranch[0].getPosition().x;
+    float y=spriteBranch[0].getPosition().y;
+
+    int choice=rand()%5;
+
+    if(choice==0){
+        x=630;
+        spriteBranch[0].setRotation(0);
+
+    }
+    else{
+        x=3000;
+    }
+
+    if(y>600){
+        y=-300;
+    }else{
+        y +=chopheight;
+    }
+    spriteBranch[0].setPosition(x,y);
+
+}
+
 
 int main()
 {
@@ -68,7 +99,7 @@ int main()
     textureCloud.loadFromFile("cloud.png");
     spriteCloud.setTexture(textureCloud);
     spriteCloud.setPosition(0, 100);
-    spriteCloud.setScale(0.5, 0.5);
+    //spriteCloud.setScale(0.5, 0.5);
     bool moveCloud = false;
     float cloudSpeed = 12;
     float pixelPerSecond = 1160 / cloudSpeed;
@@ -77,14 +108,14 @@ int main()
     window.draw(spriteCloud2);
     spriteCloud2.setTexture(textureCloud);
     spriteCloud2.setPosition(-300, 50);
-    spriteCloud2.setScale(0.4, 0.4);
+    spriteCloud2.setScale(0.7, 0.7);
     float cloudSpeed2 = 18;
     float pixelPerSecond2 = 1200 / cloudSpeed2;
 
     Sprite spriteCloud3;
     spriteCloud3.setTexture(textureCloud);
     spriteCloud3.setPosition(40, 10);
-    spriteCloud3.setScale(0.2, 0.2);
+    spriteCloud3.setScale(0.4, 0.4);
     float cloudSpeed3 = 25;
     float pixelPerSecond3 = 1160 / cloudSpeed3;
 
@@ -92,8 +123,8 @@ int main()
     Texture textureBee;
     textureBee.loadFromFile("bee.png");
     spriteBee.setTexture(textureBee);
-    spriteBee.setPosition(1100, 600);
-    spriteBee.setScale(0.4, 0.4);
+    spriteBee.setPosition(1600, 600);
+    //spriteBee.setScale(0.4, 0.4);
     bool moveBee = false;
     float beeSpeed = 30;
     float pixelPerSecondBee = 1100 / beeSpeed;
@@ -102,7 +133,8 @@ int main()
     Texture textureTree;
     textureTree.loadFromFile("tree2.png");
     spriteTree.setTexture(textureTree);
-    spriteTree.setPosition(1100 / 2 - 30, 0);
+    spriteTree.setScale(1.4,1.4);
+    spriteTree.setPosition(1920/2-150, 0);
 
     int score_val = 0;
     String score = "Score = 0";
@@ -121,9 +153,9 @@ int main()
     messageText.setFont(font);
     messageText.setFillColor(Color::White);
     messageText.setString("Please Enter to Start The Game!");
-    messageText.setCharacterSize(30);
+    messageText.setCharacterSize(50);
 
-    messageText.setPosition(1920 / 3.0f, 1080 / .0f);
+    messageText.setPosition(1920 / 2.0f, 1080 / 3.0f);
 
     bool paused = true;
 
@@ -138,6 +170,21 @@ int main()
 
     float timeOutTime = 6;
     float timeBarPixPerSec = timeBarWidth / timeOutTime;
+
+    Sprite spriteBranch[6];
+    Texture textureBranch;
+    textureBranch.loadFromFile("branch.png");
+    
+
+    int maxBranch=6;
+    for(int i=0;i<maxBranch;i++){
+        spriteBranch[i].setTexture(textureBranch);
+        spriteBranch[i].setPosition(410,-400);
+        spriteBranch[i].setOrigin(220,40);
+        spriteBranch[i].setRotation(180);
+    }
+
+    int chopheight=100;
 
     Clock ct;
     Time dt;
@@ -161,7 +208,7 @@ int main()
         if (event.type == Event::KeyReleased && acceptInput == false)
         {
             acceptInput = true;
-        }
+        } window.draw(messageText);
 
         dt = ct.restart();
         // move element
@@ -204,12 +251,18 @@ int main()
             if (Keyboard::isKeyPressed(Keyboard::Right) && !paused)
             {
                 score_val++;
+                timeOutTime=6;
+                updateBranch(spriteBranch,chopheight,maxBranch);
+
                 acceptInput = false;
             }
 
             if (Keyboard::isKeyPressed(Keyboard::Left) && !paused)
             {
                 score_val++;
+                timeOutTime=6;
+                updateBranch(spriteBranch,chopheight,maxBranch);
+
                 acceptInput = false;
             }
         }
@@ -231,7 +284,9 @@ int main()
         window.draw(spriteCloud);
 
         window.draw(spriteTree);
-
+        for(int i=0;i<maxBranch;i++)
+            window.draw(spriteBranch[i]);
+        
         window.draw(spriteBee);
 
         window.draw(scoreMsg);
