@@ -53,31 +53,34 @@ void updateTimeBar(RectangleShape &timeBar,float &timeOutTime,float &timeBarPixP
 void updateBranch(Sprite *spriteBranch,int &chopheight,int &maxBranch){
 
     for(int i=maxBranch-1;i>0;i--){
-        spriteBranch[i].setPosition(spriteBranch[i-1].getPosition());
-        spriteBranch[i].setRotation(spriteBranch[i].getRotation());  
-    }
-    
+        float x=spriteBranch[i-1].getPosition().x;
+        float y=spriteBranch[i-1].getPosition().y;
+        if(y>900){
+            y=-160;
+        }else{
+            y=y+chopheight;
+        }
+        spriteBranch[i].setPosition(x,y);
+        spriteBranch[i].setRotation(spriteBranch[i-1].getRotation());      
+    }   
 
-    float x=spriteBranch[0].getPosition().x;
-    float y=spriteBranch[0].getPosition().y;
-
-    int choice=rand()%5;
+    float x=spriteBranch[0].getPosition().x;   
+    int choice=rand()%3;
 
     if(choice==0){
-        x=630;
+        x=1330;
         spriteBranch[0].setRotation(0);
 
+    }
+    else if(choice==1){
+        x=630;
+        spriteBranch[0].setRotation(180);
     }
     else{
         x=3000;
     }
 
-    if(y>600){
-        y=-300;
-    }else{
-        y +=chopheight;
-    }
-    spriteBranch[0].setPosition(x,y);
+    spriteBranch[0].setPosition(x,-160);
 
 }
 
@@ -179,12 +182,23 @@ int main()
     int maxBranch=6;
     for(int i=0;i<maxBranch;i++){
         spriteBranch[i].setTexture(textureBranch);
-        spriteBranch[i].setPosition(410,-400);
+        spriteBranch[i].setPosition(3000,-260);
         spriteBranch[i].setOrigin(220,40);
         spriteBranch[i].setRotation(180);
     }
 
-    int chopheight=100;
+    int chopheight=200;
+
+    Sprite spritePlayer;
+    Texture texturePlayer;
+    texturePlayer.loadFromFile("player.png");
+    spritePlayer.setTexture(texturePlayer);
+    
+    FloatRect bounds=spritePlayer.getLocalBounds();
+    spritePlayer.setOrigin(bounds.left+bounds.width/2.0f,bounds.top+bounds.height/2.0f);
+    spritePlayer.setPosition(1310,900-bounds.height/2.0f);
+
+    bool gameOver=false;
 
     Clock ct;
     Time dt;
@@ -246,25 +260,64 @@ int main()
                 {
                     messageText.setString("");
                 }
+                if(timeOut){
+                    timeOutTime=6;
+                    timeOut=false;
+                    score_val=0;
+                }
+                if(gameOver){
+                    timeOutTime=6;
+                    timeOut=false;
+                    score_val=0;
+                    gameOver=false;
+                    paused=false;
+                    for(int i=0;i<maxBranch;i++){
+                        spriteBranch[i].setPosition(3000,-260);
+                    }
+                    
+                    
+                }
+                
                 acceptInput = false;
             }
-            if (Keyboard::isKeyPressed(Keyboard::Right) && !paused)
+            if (Keyboard::isKeyPressed(Keyboard::Right) && !paused && !gameOver)
             {
                 score_val++;
                 timeOutTime=6;
                 updateBranch(spriteBranch,chopheight,maxBranch);
 
+
+                float y=spritePlayer.getPosition().y;
+                spritePlayer.setPosition(810+300+bounds.width/2.0f-10,y);
+                spritePlayer.setScale(1.0f,1.0f);
+
                 acceptInput = false;
             }
 
-            if (Keyboard::isKeyPressed(Keyboard::Left) && !paused)
+            if (Keyboard::isKeyPressed(Keyboard::Left) && !paused && !gameOver)
             {
                 score_val++;
                 timeOutTime=6;
                 updateBranch(spriteBranch,chopheight,maxBranch);
 
+                float y=spritePlayer.getPosition().y;
+                spritePlayer.setPosition(810-bounds.width/2.0f-10,y);
+                spritePlayer.setScale(-1.0f,1.0f);
+
                 acceptInput = false;
             }
+        }
+
+        FloatRect playerBound=spritePlayer.getGlobalBounds();
+        FloatRect branchBound=spriteBranch[5].getGlobalBounds();
+
+        if(playerBound.intersects(branchBound)){
+            timeBar.setSize(Vector2f(0,0));
+            messageText.setString("Game Over !!!!");
+            paused=true;
+            
+            gameOver=true;
+            
         }
 
         std::stringstream ss;
@@ -286,6 +339,8 @@ int main()
         window.draw(spriteTree);
         for(int i=0;i<maxBranch;i++)
             window.draw(spriteBranch[i]);
+        
+        window.draw(spritePlayer);    
         
         window.draw(spriteBee);
 
