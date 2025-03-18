@@ -4,14 +4,17 @@
 #include <sstream>
 using namespace sf;
 
-void updateCloud(Sprite &s, Time &dt, float &pixelPerSecond)
+void updateCloud(Sprite &s, Time &dt, float &pixelPerSecond,bool gameOver,bool timeOut)
 {
-
+    static float x1=s.getPosition().x;
+    static float y1=s.getPosition().y;
     float x = s.getPosition().x + dt.asSeconds() * pixelPerSecond;
     float y = s.getPosition().y;
     if (x > 1900)
     {
         s.setPosition(-200, y);
+    }else if(gameOver || timeOut){
+        s.setPosition(x1,y1);
     }
     else
     {
@@ -19,9 +22,10 @@ void updateCloud(Sprite &s, Time &dt, float &pixelPerSecond)
     }
 }
 
-void updateBee(Sprite &s, Time &dt, float &pixelPerSecond)
+void updateBee(Sprite &s, Time &dt, float &pixelPerSecond,bool gameOver,bool timeOut)
 {
-
+    static float x1=s.getPosition().x;
+    static float y1=s.getPosition().y;
     static float timex = 0.0f;
     timex += dt.asSeconds();
     float x = s.getPosition().x - dt.asSeconds() * pixelPerSecond;
@@ -29,6 +33,8 @@ void updateBee(Sprite &s, Time &dt, float &pixelPerSecond)
     if (x < -200)
     {
         s.setPosition(2000, y);
+    }else if(gameOver || timeOut){
+        s.setPosition(x1,y1);
     }
     else
     {
@@ -200,6 +206,21 @@ int main()
 
     bool gameOver=false;
 
+    Sprite spriteLog;
+    Texture textureLog;
+    textureLog.loadFromFile("log.png");
+    spriteLog.setTexture(textureLog);
+    spriteLog.setPosition(810,780);
+
+    float logSpeedX=0.1;
+    float logPixelPerSecX=990/logSpeedX;
+    float logSpeedY=0.1;
+    float logPixelPerSecY=-400/logSpeedY;
+    bool logActive=false;
+    float logPixelPerX;
+
+
+
     Clock ct;
     Time dt;
 
@@ -226,14 +247,14 @@ int main()
 
         dt = ct.restart();
         // move element
-        if (!paused)
+        if (!paused || logActive)
         {
 
-            updateCloud(spriteCloud, dt, pixelPerSecond);
-            updateCloud(spriteCloud2, dt, pixelPerSecond2);
-            updateCloud(spriteCloud3, dt, pixelPerSecond3);
+            updateCloud(spriteCloud, dt, pixelPerSecond,gameOver,timeOut);
+            updateCloud(spriteCloud2, dt, pixelPerSecond2,gameOver,timeOut);
+            updateCloud(spriteCloud3, dt, pixelPerSecond3,gameOver,timeOut);
 
-            updateBee(spriteBee, dt, pixelPerSecondBee);
+            updateBee(spriteBee, dt, pixelPerSecondBee,gameOver,timeOut);
 
             updateTimeBar(timeBar,timeOutTime,timeBarPixPerSec,timeBarHeight,timeOut,dt);
             
@@ -252,7 +273,7 @@ int main()
                 moveCloud = true;
                 moveBee = true;
                 paused = !paused;
-                if (paused)
+                if (paused && !logActive)
                 {
                     messageText.setString("Paused!!!!");
                 }
@@ -291,6 +312,9 @@ int main()
                 spritePlayer.setPosition(810+300+bounds.width/2.0f-10,y);
                 spritePlayer.setScale(1.0f,1.0f);
 
+                logPixelPerX=-logPixelPerSecX;
+                logActive=true;
+
                 acceptInput = false;
             }
 
@@ -303,6 +327,9 @@ int main()
                 float y=spritePlayer.getPosition().y;
                 spritePlayer.setPosition(810-bounds.width/2.0f-10,y);
                 spritePlayer.setScale(-1.0f,1.0f);
+
+                logPixelPerX=logPixelPerSecX;
+                logActive=true;
 
                 acceptInput = false;
             }
@@ -329,6 +356,21 @@ int main()
         float mid_y = bounds.top + bounds.height / 2;
         messageText.setOrigin(mid_x, mid_y);
 
+        if(logActive){
+            float x=spriteLog.getPosition().x;
+            float y=spriteLog.getPosition().y;
+
+            x=x+logPixelPerX*dt.asSeconds();
+            y=y+logPixelPerSecY*dt.asSeconds();
+
+            if(x<0 || x>1980){
+                x=810;
+                y=780;
+                logActive=false;
+            }
+            spriteLog.setPosition(x,y);
+        }
+
         window.clear();
 
         window.draw(spritebg);
@@ -339,6 +381,8 @@ int main()
         window.draw(spriteTree);
         for(int i=0;i<maxBranch;i++)
             window.draw(spriteBranch[i]);
+        
+        window.draw(spriteLog);    
         
         window.draw(spritePlayer);    
         
